@@ -1,4 +1,4 @@
-id,name,password
-1,miqia,12345
-2,rickshevkun,67890
-3,testuser,101010
+id,name,password,telegram_user_id,login_automatically
+1,miqia,12345,962847564,1
+2,rickshevkun,67890,,
+3,testuser,101010,,

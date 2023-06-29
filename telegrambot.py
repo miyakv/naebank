@@ -1,5 +1,6 @@
 import telebot
 import userapp
+import csv
 
 
 bot = telebot.TeleBot('6197122837:AAE8OGHDbCH3JisyDWwSM6_sr1o2oA1mdno')
@@ -21,9 +22,18 @@ def get_usersession(telegram_user_id):
 def get_text_messages(message):
     u = get_usersession(message.from_user.id)
     if not u:
+        print(message.from_user.id)
         current_usersessions.append(userapp.UserSession(message.from_user.id))
         u = current_usersessions[-1]
-
+        db_name = "users.db"
+        with open(db_name, 'r', newline='', encoding='utf-8') as db_file:
+            for line in csv.DictReader(db_file):
+                if line["login_automatically"] == "1":
+                    if int(line["telegram_user_id"]) == message.from_user.id:
+                        print("Попытка автоматического входа...")
+                        u.auto_log_in(line["name"], line["id"])
+                        bot.send_message(message.from_user.id, f"Добро пожаловать в Наебанк, {line['name']}!", reply_markup=telebot.types.ReplyKeyboardRemove(selective=None))
+                        homepage(message)
     if not u.logged_in:
         if message.text in ["/start", "help", "/restart", "Попробовать ещё раз"]:
             bot.send_message(message.from_user.id, "Добро пожаловать в Наебанк! Введите ваш логин", reply_markup=telebot.types.ReplyKeyboardRemove(selective=None))
