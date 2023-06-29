@@ -1,6 +1,7 @@
 from accountant import Accountant
 from market import *
 import csv
+import passwords
 from new_exceptions import *
 import messages
 
@@ -72,7 +73,7 @@ class UserSession:
         return False
 
     def try_password(self, password):
-        if password == self.bank.users_db[self.tries_to_log_in][0]:
+        if passwords.check_password(password, self.bank.users_db[self.tries_to_log_in][0]):
             self.username = self.tries_to_log_in
             self.tries_to_log_in = None
             self.logged_in = True
