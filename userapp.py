@@ -22,7 +22,9 @@ class Naebank:
                     self.users_list.append(line['name'])
                     self.users_db[line['name']] = [line['password'], line['id']]
 
-    def update_user_telegram_id(self, bank_id, new_telegram_id):
+    def update_user_data(self, bank_id, new_telegram_id=None, new_password=None):
+        if new_password is None and new_telegram_id is None:
+            return False
         with open(self.users_db_name, 'r', newline='', encoding='utf-8') as db_file, open("udummy.csv", 'w', newline='', encoding='utf-8') as dummy_file:
             rdr = csv.DictReader(db_file)
             wrt = csv.writer(dummy_file)
@@ -36,8 +38,10 @@ class Naebank:
                 else:
                     found = True
                     new = line
-                    new['telegram_user_id'] = new_telegram_id
-                    new['login_automatically'] = 1
+                    if new_telegram_id is not None:
+                        new['telegram_user_id'] = new_telegram_id
+                    if new_password is not None:
+                        new['password'] = new_password
                     print(new)
                     wrt.writerow(new.values())
 
@@ -78,7 +82,7 @@ class UserSession:
             self.tries_to_log_in = None
             self.logged_in = True
             self.id = int(self.bank.users_db[self.username][1])
-            self.bank.update_user_telegram_id(self.id, self.telegram_user_id)
+            self.bank.update_user_data(self.id, new_telegram_id=self.telegram_user_id)
             return self.username
         return False
 
@@ -91,3 +95,20 @@ class UserSession:
 
     def transfer(self):
         self.bank.acc.transfer(int(self.id), int(self.bank.users_db[self.send_destination][1]), self.send_currency, float(self.send_amount), allow_negative=True)
+
+    def check_password(self, to_try):
+        print("Ща будем посмотреть")
+        if passwords.check_password(to_try, self.bank.users_db[self.username][0]):
+            print("Верный пароль")
+            return True
+        print("Неверный пароль")
+        return False
+
+    def change_password(self, new_password):
+        if not passwords.validate_password(new_password):
+            return False
+        hashed_password = passwords.encode(new_password)
+        self.bank.update_user_data(self.id, new_password=hashed_password)
+        return True
+
+

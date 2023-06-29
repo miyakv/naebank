@@ -1,6 +1,7 @@
 import telebot
 import userapp
 import csv
+import passwords
 
 
 bot = telebot.TeleBot('6197122837:AAE8OGHDbCH3JisyDWwSM6_sr1o2oA1mdno')
@@ -9,6 +10,7 @@ current_usersessions = []
 
 error_markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
 error_markup.add(telebot.types.KeyboardButton("Домой"))
+prohibited_passwords = ["Перевести", "/start", "Сменить пароль", "Обновить", "Домой", "Выйти", "help", "/restart", "Попробовать ещё раз"]
 
 
 def get_usersession(telegram_user_id):
@@ -89,6 +91,9 @@ def action(message):
         bot.register_next_step_handler(message, select_currency)
     elif message.text == "Обновить":
         homepage(message)
+    elif message.text == "Сменить пароль":
+        bot.send_message(message.from_user.id, "Введите текущий пароль", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.register_next_step_handler(message, change_password)
 
 
 def select_currency(message):
@@ -130,6 +135,23 @@ def send_money_ask(message):
         u.send_amount = message.text
         u.transfer()
         bot.send_message(message.from_user.id, f"Перевод выполнен успешно", reply_markup=error_markup)
+
+
+def change_password(message):
+    u = get_usersession(message.from_user.id)
+    if u.check_password(message.text):
+        bot.send_message(message.from_user.id, f"Введите новый пароль. Пароль должен содержать буквы вернего и нижнего регистра, а также хотя бы одно число, и иметь длину минимум в 8 символов", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.register_next_step_handler(message, input_new_password)
+    else:
+        bot.send_message(message.from_user.id, f"Неверный пароль! Нажмите Домой, чтобы вернуться в главное меню", reply_markup=error_markup)
+
+
+def input_new_password(message):
+    u = get_usersession(message.from_user.id)
+    if u.change_password(message.text):
+        bot.send_message(message.from_user.id, f"Пароль успешно изменён!", reply_markup=error_markup)
+    else:
+        bot.send_message(message.from_user.id, f"Пароль не проходит проверку на безопасность. Нажмите Домой, чтобы вернуться в главное меню", reply_markup=error_markup)
 
 
 bot.polling(none_stop=True, interval=0)
