@@ -10,6 +10,7 @@
 # transfer_from_all_to_one(whom_to, currency, sum)
 import csv
 import os
+# import sqlite3 as sl
 from new_exceptions import *
 from pretty import pretty_file
 
@@ -32,6 +33,7 @@ class Accountant:
                 rdr = csv.reader(db_file)
                 self.currencies_list = list(rdr)[0][2:]
             return
+
         # creating/rewriting db
         with open(db_name, 'w', newline='', encoding='utf-8') as db_file:
             wr = csv.writer(db_file)
