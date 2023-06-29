@@ -24,7 +24,6 @@ def get_usersession(telegram_user_id):
 def get_text_messages(message):
     u = get_usersession(message.from_user.id)
     if not u:
-        print(message.from_user.id)
         current_usersessions.append(userapp.UserSession(message.from_user.id))
         u = current_usersessions[-1]
         db_name = "users.db"
@@ -76,6 +75,7 @@ def homepage(message):
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add(telebot.types.KeyboardButton("Перевести"))
     markup.add(telebot.types.KeyboardButton("Сменить пароль"))
+    markup.add(telebot.types.KeyboardButton("Выйти"))
     bot.send_message(message.from_user.id, u.get_balance(), reply_markup=markup)
     bot.register_next_step_handler(message, action)
 
@@ -94,6 +94,9 @@ def action(message):
     elif message.text == "Сменить пароль":
         bot.send_message(message.from_user.id, "Введите текущий пароль", reply_markup=telebot.types.ReplyKeyboardRemove())
         bot.register_next_step_handler(message, change_password)
+    elif message.text == "Выйти":
+        bot.send_message(message.from_user.id, f"До встречи, {u.username}!", reply_markup=telebot.types.ReplyKeyboardRemove())
+        u.quit()
 
 
 def select_currency(message):

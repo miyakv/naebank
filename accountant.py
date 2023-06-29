@@ -21,7 +21,6 @@ class Accountant:
         self.name_prefix = name_prefix
         self.currencies_list = currencies_list
         self.digits_dict = dict(zip(currencies_list, [base_digits] * len(currencies_list)))
-        print(self.digits_dict)
         self.db_name = db_name
         self.number_of_players = players
         # making all currencies' names lower

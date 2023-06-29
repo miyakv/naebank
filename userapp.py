@@ -22,13 +22,12 @@ class Naebank:
                     self.users_list.append(line['name'])
                     self.users_db[line['name']] = [line['password'], line['id']]
 
-    def update_user_data(self, bank_id, new_telegram_id=None, new_password=None):
+    def update_user_data(self, bank_id, new_telegram_id=None, new_password=None, new_autologin=None):
         if new_password is None and new_telegram_id is None:
             return False
         with open(self.users_db_name, 'r', newline='', encoding='utf-8') as db_file, open("udummy.csv", 'w', newline='', encoding='utf-8') as dummy_file:
             rdr = csv.DictReader(db_file)
             wrt = csv.writer(dummy_file)
-            print(rdr.fieldnames)
             wrt.writerow(rdr.fieldnames)
             found = False
 
@@ -42,7 +41,8 @@ class Naebank:
                         new['telegram_user_id'] = new_telegram_id
                     if new_password is not None:
                         new['password'] = new_password
-                    print(new)
+                    if new_autologin is not None:
+                        new['login_automatically'] = new_autologin
                     wrt.writerow(new.values())
 
         os.remove(self.users_db_name)
@@ -63,7 +63,6 @@ class UserSession:
         self.send_destination = None
         self.send_currency = None
         self.send_amount = None
-        print(self.bank.users_db)
 
     def auto_log_in(self, username, idn):
         self.username = username
@@ -88,7 +87,6 @@ class UserSession:
 
     def get_balance(self):
         res = ["=== ВАШ БАЛАНС ==="]
-        print(self.bank.acc.currencies_list)
         for currency in self.bank.acc.currencies_list:
             res.append(f"{self.bank.acc.check_balance(self.id, currency):.2f} {currency}")
         return "\n".join(res)
@@ -97,11 +95,8 @@ class UserSession:
         self.bank.acc.transfer(int(self.id), int(self.bank.users_db[self.send_destination][1]), self.send_currency, float(self.send_amount), allow_negative=True)
 
     def check_password(self, to_try):
-        print("Ща будем посмотреть")
         if passwords.check_password(to_try, self.bank.users_db[self.username][0]):
-            print("Верный пароль")
             return True
-        print("Неверный пароль")
         return False
 
     def change_password(self, new_password):
@@ -111,4 +106,10 @@ class UserSession:
         self.bank.update_user_data(self.id, new_password=hashed_password)
         return True
 
-
+    def quit(self):
+        self.bank.update_user_data(self.id, new_autologin="0")
+        self.username = None
+        self.id = None
+        self.logged_in = False
+        self.tries_to_log_in = None
+        return True
